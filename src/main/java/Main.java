@@ -28,9 +28,9 @@ public class Main {
                 System.out.println(line);
 
                 String [] requestSplit = line.split(" ",0);
-
+                System.out.println(requestSplit[1]);
                 //validate the request target's url
-                if (requestSplit[1] == "/"){
+                if (requestSplit[1].equals("/")){
                     clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
                 }else{
                     clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
