@@ -9,14 +9,17 @@ public class Main {
 
 //     Uncomment this block to pass the first stage
 
-       ServerSocket serverSocket = null;
-       Socket clientSocket = null;
+       ServerSocket serverSocket = null; //listens for incoming requests
+       Socket clientSocket = null;  //handles communication between the client and server
 
      try {
        serverSocket = new ServerSocket(4221);
        serverSocket.setReuseAddress(true);
        clientSocket = serverSocket.accept(); // Wait for connection from client.
        System.out.println("accepted new connection");
+
+       //send a response to the client after successful connection with OutputStream
+       clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
      } catch (IOException e) {
        System.out.println("connection unsuccessful: " + e.getMessage());
      }
