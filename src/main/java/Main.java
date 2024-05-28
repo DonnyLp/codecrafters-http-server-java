@@ -43,13 +43,15 @@ public class Main {
 
                 String body = "";
                 System.out.println(body);
-
                 //return 404 if echo keyword doesn't exist
-                if(!requestSplit[1].contains("echo")){
+                if(!requestSplit[1].contains("echo") && !requestSplit[1].equals("/")){
                     clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
                 }else{
-                    //Grab the string after the echo keyword
-                    body = requestSplit[1].substring(6);
+                    //Set the body if the request isn't an empty request
+                    if(!requestSplit[1].equals("/")){
+                        body = requestSplit[1].substring(6);
+                    }
+
                     clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
                             + body.length() +"\r\n\r\n"
                             + body).getBytes());
