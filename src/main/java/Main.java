@@ -65,13 +65,8 @@ public class Main {
 
                 //grab and return the corresponding user agent header value in the response
                 if(userAgentEndpoint.contains("user-agent")){
-                    userAgentHeaderValue = requestSplit[3].substring(11);
-                    clientSocket.getOutputStream()
-                            .write(("HTTP/1.1 200 OK\r\n" +
-                            "Content-Type: text/plain\r\n" +
-                            "Content-Length:" +
-                                    userAgentHeaderValue.length() +"\r\n\r\n" +
-                                    userAgentHeaderValue).getBytes());
+                    userAgentHeaderValue = requestSplit[3].substring(11).trim();
+                    clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:" + userAgentHeaderValue.length() +"\r\n\r\n" + userAgentHeaderValue).getBytes());
                 }else{
                     clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes()
 );
