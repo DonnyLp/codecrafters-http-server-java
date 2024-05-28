@@ -46,7 +46,7 @@ public class Main {
 
                 //return 404 if echo keyword doesn't exist
                 if(!requestSplit[1].contains("echo")){
-                    clientSocket.getOutputStream().write("HTTP/1.1 400 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
+                    clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
                 }else{
                     //Grab the string after the echo keyword
                     body = requestSplit[1].substring(6);
