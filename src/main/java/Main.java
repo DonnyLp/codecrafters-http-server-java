@@ -25,12 +25,13 @@ public class Main {
                 //Grab the request
                 InputStream inputStream = clientSocket.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                char [] requestCharacters = new char[512];
+                bufferedReader.read(requestCharacters); //pass the buffered inputStream into a char array
+                String requestString = new String(requestCharacters);
+                System.out.println(requestString);
 
-                String request = bufferedReader.readLine();
-                System.out.println(request);
-
-                String [] requestSplit = request.split(" ",0);
-                System.out.println(requestSplit[1]);
+                String [] requestSplit = requestString.split("\r\n",0);
+                System.out.println(requestSplit[3]);
 
 //                // Part 3: Validate the request target's url
 //                if (requestSplit[1].equals("/")){
@@ -39,22 +40,41 @@ public class Main {
 //                    clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
 //                }
 
-                //Part 4: Send a response with a body
+//                //Part 4: Send a response with a body
+//
+//                String body = "";
+//                System.out.println(body);
+//                //return 404 if echo keyword doesn't exist
+//                if(!requestSplit[1].contains("echo") && !requestSplit[1].equals("/")){
+//                    clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
+//                }else{
+//                    //Set the body if the request isn't an empty request
+//                    if(!requestSplit[1].equals("/")){
+//                        body = requestSplit[1].substring(6);
+//                    }
+//
+//                    clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
+//                            + body.length() +"\r\n\r\n"
+//                            + body).getBytes());
+//                }
 
-                String body = "";
-                System.out.println(body);
-                //return 404 if echo keyword doesn't exist
-                if(!requestSplit[1].contains("echo") && !requestSplit[1].equals("/")){
-                    clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
+                //Part 5: User Agent
+
+                String userAgentEndpoint = requestSplit[0];
+                String userAgentHeaderValue = "";
+
+                //grab and return the corresponding user agent header value in the response
+                if(userAgentEndpoint.contains("user-agent")){
+                    userAgentHeaderValue = requestSplit[3].substring(11);
+                    clientSocket.getOutputStream()
+                            .write(("HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: text/plain\r\n" +
+                            "Content-Length:" +
+                                    userAgentHeaderValue.length() +"\r\n\r\n" +
+                                    userAgentHeaderValue).getBytes());
                 }else{
-                    //Set the body if the request isn't an empty request
-                    if(!requestSplit[1].equals("/")){
-                        body = requestSplit[1].substring(6);
-                    }
-
-                    clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
-                            + body.length() +"\r\n\r\n"
-                            + body).getBytes());
+                    clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes()
+);
                 }
 
             } catch (IOException e) {
