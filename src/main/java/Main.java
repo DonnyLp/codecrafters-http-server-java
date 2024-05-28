@@ -16,24 +16,40 @@ public class Main {
         Socket clientSocket = null;  //handles communication between the client and server
 
             try {
+
                 serverSocket = new ServerSocket(4221);
                 serverSocket.setReuseAddress(true);
                 clientSocket = serverSocket.accept(); // Wait for connection from client.
                 System.out.println("listening for requests from the client");
 
+                //Grab the request
                 InputStream inputStream = clientSocket.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
-                String line = bufferedReader.readLine();
-                System.out.println(line);
+                String request = bufferedReader.readLine();
+                System.out.println(request);
 
-                String [] requestSplit = line.split(" ",0);
+                String [] requestSplit = request.split(" ",0);
                 System.out.println(requestSplit[1]);
-                //validate the request target's url
-                if (requestSplit[1].equals("/")){
-                    clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
+
+//                // Part 3: Validate the request target's url
+//                if (requestSplit[1].equals("/")){
+//                    clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
+//                }else{
+//                    clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
+//                }
+
+                //Part 4: Send a response with a body
+
+                String body = requestSplit[1].substring(6);
+                System.out.println(body);
+
+                if(body.equals("")){
+                    clientSocket.getOutputStream().write("No body found in request".getBytes());
                 }else{
-                    clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes());
+                    clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
+                            + body.length() +"\r\n\r\n"
+                            + body).getBytes());
                 }
 
             } catch (IOException e) {
