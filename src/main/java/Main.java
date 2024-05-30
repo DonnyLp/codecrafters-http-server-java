@@ -11,20 +11,33 @@ public class Main {
 
     public static void main(String[] args) {
         
-        //Create a pool of threads of a fixed size THREAD_SIZE that will serve mutliple concurrent client requests
+        //Create a pool of threads of a fixed sized that will serve concurrent client requests
         ExecutorService threads = Executors.newFixedThreadPool(THREAD_SIZE);
 
         System.out.println("Server spinning up!");
-            
+
+        // //Print out command line arguments
+        // for (String item : args){
+        //    System.out.println(item);
+        // }
+
+        //Try to spin up the server and execute the concurrent tasks
         try(ServerSocket serverSocket = new ServerSocket(PORT)){
             System.out.println("Server started on PORT: " + PORT);
-            //enable the SO_REUSEADDR flag
+            
+            //enable the SO_REUSEADDR flag to allow the resuse of the server address
             serverSocket.setReuseAddress(true);
             
-            //Execute a new clienthandler instance
+            //Set the directory from the command line arguments
+            String directoryPath = "";
+
+            if(args.length > 0){
+                directoryPath = args[1];
+            }
+    
             while(true){
-                ClientHandler exectutionTask = new ClientHandler(serverSocket.accept());
-                threads.execute(exectutionTask);
+                ClientHandler task = new ClientHandler(serverSocket.accept(), directoryPath);
+                threads.execute(task);
             } 
         }catch (IOException e) {
             e.printStackTrace();
