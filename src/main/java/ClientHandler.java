@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,7 +45,6 @@ public class ClientHandler implements Runnable {
 
         try{
             handleRequest(clientSocket);
-            System.out.print("");
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -62,17 +63,9 @@ public class ClientHandler implements Runnable {
                 char [] requestCharacters = new char[512];
                 bufferedReader.read(requestCharacters); //pass the buffered inputStream into a char array
                 String requestString = new String(requestCharacters);
-
-                //Split the request string by sections: Request Line, Headers, Body
-                //Further spliting used for parsing parts of each request section i.e path
-                String [] requestSplit = requestString.split("\r\n",0); 
-                String [] requestLine = requestSplit[0].split(" ", 0); 
-                String requestType = requestLine[0]; 
-                String requestURI = requestLine[1]; 
+                String requestURI = getRequestURI(requestString); 
                 
-                String echoString; 
-                String userAgentHeaderValue;
- 
+
                 //Grab the index of where the user agent header is found in the request string
                 int agentUserIndex = requestString.indexOf("User-Agent:");
                 
@@ -80,52 +73,56 @@ public class ClientHandler implements Runnable {
                 //All operations supported for responses
                 switch (defineServerOperation(requestURI)) {
                     case ECHO ->{
-                        echoString = requestURI.substring(6);
+                        String echoString = requestURI.substring(6);
                         clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
                                + echoString.length() +"\r\n\r\n"
                                + echoString).getBytes());
                     }
                     case USER_AGENT->{
                         //Grab the user agent header information and return its contents to the client
-                        userAgentHeaderValue = requestString.substring(agentUserIndex + 11).trim();
+                        String userAgentHeaderValue = requestString.substring(agentUserIndex + 11).trim();
                         clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:" + userAgentHeaderValue.length() +"\r\n\r\n" + userAgentHeaderValue).getBytes());
                     }
                     case EMPTY->{
                         clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
                     }
                     case FILE ->{
-                        handleGetFileRequest(directoryPath, clientSocket, requestString,requestType);
+                        handleGetFileRequest(directoryPath, clientSocket, requestString);
                     }
                     case INVALID_REQUEST->{
                         clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
                     }
                     default -> throw new HttpServerException("Server operation not assigned properly");
                 }   
-                clientSocket.close();
     }
 
 
 
-    private void handleGetFileRequest(String directoryPath, Socket clientSocket, String requestURI, String requestType) throws FileNotFoundException, IOException{
+    private void handleGetFileRequest(String directoryPath, Socket clientSocket, String requestString) throws FileNotFoundException, IOException{
         
         //Construct the newly wanted absolute path for the given filename
         
-        String fileName = requestURI.split("/")[2];
+        String fileName = getRequestURI(requestString).split("/")[2];
         directoryPath += fileName;
 
         //Create a directory instance
         Path directory = Path.of(directoryPath);
         char [] fileBuffer = new char[1024];
         FileReader fileReader;
+        FileWriter fileWriter;
+
+        //Get the cotents that will be appended to the given file
+        String [] requestParts = requestString.split("\r\n", 0);
+        String requestBody = requestParts[requestParts.length - 1].trim();
 
         boolean fileExists = Files.exists(directory);
             
-            if(fileExists){
+            if(fileExists || getRequestType(requestString).equals("POST")){
 
                 //Jump to the appropriate request type 
-                switch (requestType) {
+                switch (getRequestType(requestString)) {
                     case "GET" -> {
-                    //Create a new fileReader instance for the existing file
+                    //Create a new fileReader instance to read the existing file
                     fileReader = new FileReader(directoryPath);
                     fileReader.read(fileBuffer);
                     String fileContents = new String(fileBuffer).trim();
@@ -137,10 +134,17 @@ public class ClientHandler implements Runnable {
 
                     }
                     case "POST" -> {
+                        //Create a new file
+                        File file = new File(directoryPath);
                         //Create a new filewriter instance to write to the given filename
+                        fileWriter = new FileWriter(file);
+                        fileWriter.write(requestBody);
+                        fileWriter.flush();
+                        fileWriter.close();
+                        clientSocket.getOutputStream().write("HTTP/1.1 201 Created\r\n Content-Type: application/octet-stream\r\n\r\n".getBytes());
                     }
-                    default -> throw new HttpServerException("Request Type" + requestType + " is currently not supported");
-                };
+                    default -> throw new HttpServerException("Request Type" + getRequestType(requestString) + " is currently not supported");
+                }
 
             }else{
                 clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
@@ -169,9 +173,14 @@ public class ClientHandler implements Runnable {
         return requestSplit[0].split(" ", 0);
     }
 
-    private String getRequestURI(String requestString){
-        String requestUri = getRequestURI(requestString);
-        return requestUri;
+    private String getRequestType(String requestString){
+        return getRequestLine(requestString)[0];
     }
+
+    private String getRequestURI(String requestString) {
+        return getRequestLine(requestString)[1];
+    }
+
+   
 
 }
