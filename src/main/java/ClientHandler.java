@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -9,6 +10,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.GZIPOutputStream;
 
 public class ClientHandler implements Runnable {
     
@@ -116,15 +118,23 @@ public class ClientHandler implements Runnable {
         for (String type : encodingTypes){
             if (type.contains("gzip")) isValidType = true;
         }
-        
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzipOutputStream = 
+                new GZIPOutputStream(byteArrayOutputStream)) {
+                    gzipOutputStream.write(requestBody.getBytes("UTF-8"));
+        }
+        byte [] gzipData = byteArrayOutputStream.toByteArray();
         if(!isValidType){
             clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
             + requestBody.length() +"\r\n\r\n"
             + requestBody).getBytes());
         }else{
-            clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " +
-            + requestBody.length() +"\r\n\r\n"
-            + requestBody).getBytes());        
+           String httpResponse =
+                "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " 
+                + gzipData.length +"\r\n\r\n"; 
+            clientSocket.getOutputStream().write(httpResponse.getBytes());
+            clientSocket.getOutputStream().write(gzipData);
         }
     }
 
