@@ -42,6 +42,7 @@ Once the server is running, you can access it in your browser or via curl:
     ```
 
 ## Project Structure
+```
 simple-http-server/
 ├── .vscode/ # VSCode settings
 ├── src/
@@ -54,3 +55,4 @@ simple-http-server/
 ├── .gitattributes
 ├── .gitignore
 └── README.md # This file
+```
