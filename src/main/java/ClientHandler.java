@@ -109,8 +109,13 @@ public class ClientHandler implements Runnable {
         
         int encodingIndex = requestString.indexOf("Accept-Encoding");
         String requestBody = requestURI.substring(6);
-        String encodingType = requestString.substring(encodingIndex + 16).trim();
-        boolean isValidType = encodingType.contains("gzip");
+        String [] encodingTypes = requestString.substring(encodingIndex + 16).trim().split(",", 0);
+        
+        boolean isValidType = false;
+
+        for (String type : encodingTypes){
+            if (type.contains("gzip")) isValidType = true;
+        }
         
         if(!isValidType){
             clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
@@ -207,9 +212,9 @@ public class ClientHandler implements Runnable {
         return requestSplit[0].split(" ", 0);
     }
 
-    private String [] getRequestParts(String requestString){
-        return requestString.split("\r\n", 0);
-    }
+    // private String [] getRequestParts(String requestString){
+    //     return requestString.split("\r\n", 0);
+    // }
 
     private String getRequestType(String requestString){
         return getRequestLine(requestString)[0];
