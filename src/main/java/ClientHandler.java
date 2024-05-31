@@ -24,7 +24,7 @@ public class ClientHandler implements Runnable {
         INVALID_REQUEST,
     };
 
-    /*
+    /**
      * Constructs a ClientHander instance with a given client socket
      * @param clientSocket - clientsocket instance received after the server accepts the client's request
      */
@@ -32,13 +32,21 @@ public class ClientHandler implements Runnable {
         this.clientSocket = clientSocket;
     }
 
+    /**
+     * Constructs a ClientHander instance with a given client socket and directory
+     * @param clientSocket Clientsocket instance received after the server accepts the client's request
+     * @param directoryPath The path to the directory where it will be either created or updated. 
+     */
+
     public ClientHandler(Socket clientSocket, String directoryPath){
         this.clientSocket = clientSocket;
         this.directoryPath = directoryPath;
     }
 
-    /*
-     * 
+   
+    /**
+     * Executes the logic for handling client requests.
+     * This method is called when the thread starts running.
      */
     @Override
     public void run() {
@@ -50,6 +58,12 @@ public class ClientHandler implements Runnable {
         }
     }
     
+    /**
+     * Handles the incoming HTTP request from the client.
+     *
+     * @param clientSocket The socket connected to the client.
+     * @throws IOException If an I/O error occurs while handling the request.
+     */
     public void handleRequest(Socket clientSocket)throws IOException{
 
                 //Grab the request from the clientSocket inputStream
@@ -65,20 +79,14 @@ public class ClientHandler implements Runnable {
                 String requestString = new String(requestCharacters);
                 String requestURI = getRequestURI(requestString); 
                 
-
-                //Grab the index of where the user agent header is found in the request string
-                int agentUserIndex = requestString.indexOf("User-Agent:");
-                
-
-                //All operations supported for responses
+                //Jump to a supported server operation
                 switch (defineServerOperation(requestURI)) {
                     case ECHO ->{
-                        String echoString = requestURI.substring(6);
-                        clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
-                               + echoString.length() +"\r\n\r\n"
-                               + echoString).getBytes());
+                        handleEchoRequest(clientSocket,requestURI,requestString);
                     }
                     case USER_AGENT->{
+                        //NOT SURE IF THIS WORKS RIGHT NOW
+                        int agentUserIndex = requestString.indexOf("User-Agent");
                         //Grab the user agent header information and return its contents to the client
                         String userAgentHeaderValue = requestString.substring(agentUserIndex + 11).trim();
                         clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:" + userAgentHeaderValue.length() +"\r\n\r\n" + userAgentHeaderValue).getBytes());
@@ -87,7 +95,7 @@ public class ClientHandler implements Runnable {
                         clientSocket.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
                     }
                     case FILE ->{
-                        handleGetFileRequest(directoryPath, clientSocket, requestString);
+                        handleFileRequest(directoryPath, clientSocket, requestString);
                     }
                     case INVALID_REQUEST->{
                         clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
@@ -96,9 +104,35 @@ public class ClientHandler implements Runnable {
                 }   
     }
 
+    
+    private void handleEchoRequest(Socket clientSocket, String requestURI,String requestString) throws IOException{
+        
+        int encodingIndex = requestString.indexOf("Accept-Encoding");
+        String requestBody = requestURI.substring(6);
+        String encodingType = requestString.substring(encodingIndex + 16).trim();
+        boolean isValidType = encodingType.contains("gzip");
+        
+        if(!isValidType){
+            clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " +
+            + requestBody.length() +"\r\n\r\n"
+            + requestBody).getBytes());
+        }else{
+            clientSocket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: " +
+            + requestBody.length() +"\r\n\r\n"
+            + requestBody).getBytes());        
+        }
+    }
 
-
-    private void handleGetFileRequest(String directoryPath, Socket clientSocket, String requestString) throws FileNotFoundException, IOException{
+    /**
+     * Handles the GET and POST requests for file retrieval and creation.
+     * 
+     * @param directoryPath The path to the directory where the file is located or will be created.
+     * @param clientSocket The socket connected to the client.
+     * @param requestString The HTTP request string received from the client.
+     * @throws FileNotFoundException If the file specified in the request does not exist.
+     * @throws IOException If an I/O error occurs while reading or writing the file.
+     */
+    private void handleFileRequest(String directoryPath, Socket clientSocket, String requestString) throws FileNotFoundException, IOException{
         
         //Construct the newly wanted absolute path for the given filename
         
@@ -149,9 +183,9 @@ public class ClientHandler implements Runnable {
             }else{
                 clientSocket.getOutputStream().write("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n".getBytes());
             } 
-        }
+    }
 
-     /*
+     /**
       * helper that validates which operation is to be executed by the server
       * @param path The path present in the request line
       * @return serverOperation An enum constant is provided depending on the given path
@@ -173,6 +207,10 @@ public class ClientHandler implements Runnable {
         return requestSplit[0].split(" ", 0);
     }
 
+    private String [] getRequestParts(String requestString){
+        return requestString.split("\r\n", 0);
+    }
+
     private String getRequestType(String requestString){
         return getRequestLine(requestString)[0];
     }
@@ -180,7 +218,4 @@ public class ClientHandler implements Runnable {
     private String getRequestURI(String requestString) {
         return getRequestLine(requestString)[1];
     }
-
-   
-
 }

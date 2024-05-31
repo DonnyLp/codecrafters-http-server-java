@@ -9,7 +9,6 @@ public class Main {
     private static final int PORT = 4221;
     private static final int THREAD_SIZE = 1;
   
-
     public static void main(String[] args) {
         
         //Create a pool of threads of a fixed sized that will serve concurrent client requests
