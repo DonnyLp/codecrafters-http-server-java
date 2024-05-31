@@ -1,39 +1,56 @@
-[![progress-banner](https://backend.codecrafters.io/progress/http-server/4d6416c3-4c63-4baa-8568-31c7134aa513)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Simple HTTP Server
 
-This is a starting point for Java solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+This repository contains a simple HTTP server built during a challenge with Codecrafters. The goal was to implement a basic HTTP server that can handle requests and respond appropriately, showcasing fundamental networking and server-side programming skills.
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+## Features
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
+- Handles basic HTTP requests
+- Serves static files from a specified directory
+- Basic routing for different endpoints
+- Logs requests and responses
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## Getting Started
 
-# Passing the first stage
+### Prerequisites
 
-The entry point for your HTTP server implementation is in
-`src/main/java/Main.java`. Study and uncomment the relevant code, and push your
-changes to pass the first stage:
+Ensure you have the following installed on your system:
 
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
+- Java (21 or higher)
 
-Time to move on to the next stage!
+### Installation
 
-# Stage 2 & beyond
+1. Clone the repository:
 
-Note: This section is for stages 2 and beyond.
+    ```bash
+    git clone https://github.com/DonnyLp/simple-http-server.git
+    cd simple-http-server
+    ```
 
-1. Ensure you have `java (21)` installed locally
-1. Run `./your_server.sh` to run your program, which is implemented in
-   `src/main/java/Main.java`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+2. Run
+   ```bash
+    ./your_server.sh
+    ```
+### Usage
+
+Once the server is running, you can access it in your browser or via curl:
+
+- Open your browser and go to `http://localhost:8080`
+- Use curl to make a request:
+
+    ```bash
+    curl http://localhost:8080
+    ```
+
+## Project Structure
+simple-http-server/
+├── .vscode/ # VSCode settings
+├── src/
+│ └── main/
+│ └── java/
+│ └── Main.java # Main server implementation
+├── codecrafters.yml # Codecrafters configuration
+├── your_server.sh # Script to run the server
+├── pom.xml # Maven configuration
+├── .gitattributes
+├── .gitignore
+└── README.md # This file
